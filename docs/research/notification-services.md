@@ -14,14 +14,14 @@ This document gathers facts only. It does not rank the options or recommend one.
 These facts come from the repo and are what each option is judged against.
 
 - **Server-rendered React Router 8.** `react-router` is pinned at `8.3.0`, with `ssr: true` in `react-router.config.ts`. Data is read in loaders and written in actions.
-- **One SQLite file.** [ADR 0006](https://github.com/qbrossard/cohort-005-project/blob/add-refund-glossary/docs/adr/0006-one-sqlite-file-through-drizzle.md) keeps all data in `data.db` through Drizzle and `better-sqlite3`: "`better-sqlite3` is synchronous, so a loader reads its data without a round trip." Its stated consequence is that "the app cannot run on more than one machine against the same data."
+- **One SQLite file.** ADR 0006 (`docs/adr/0006-one-sqlite-file-through-drizzle.md`) keeps all data in `data.db` through Drizzle and `better-sqlite3`: "`better-sqlite3` is synchronous, so a loader reads its data without a round trip." Its stated consequence is that "the app cannot run on more than one machine against the same data."
 - **No real login.** `app/lib/session.ts` stores a numeric `userId` in a cookie session. The DevUI panel posts to `app/routes/api.switch-user.ts`, which sets the cookie and redirects. `users.id` is an auto-increment integer in `app/db/schema.ts`.
 - **The app shell already loads per-user data.** The loader in `app/routes/layout.app.tsx` reads the current user id on every request and returns shell data (current user, recent courses, team-admin flag).
-- **The mailer is the precedent for an external service.** [`app/lib/mailer.server.ts`](https://github.com/qbrossard/cohort-005-project/blob/add-refund-glossary/app/lib/mailer.server.ts) sends through Postmark when `POSTMARK_SERVER_TOKEN` is set and otherwise writes each email to `.outbox/` as JSON, behind a `MailTransport` interface. Dev and tests need no network.
+- **The mailer is the precedent for an external service.** `app/lib/mailer.server.ts` sends through Postmark when `POSTMARK_SERVER_TOKEN` is set and otherwise writes each email to `.outbox/` as JSON, behind a `MailTransport` interface. Dev and tests need no network.
 - **Tests run against in-memory SQLite.** `app/test/setup.ts` creates a fresh `:memory:` database and applies the same Drizzle migrations as the live one.
 - **No live-update code exists yet.** `app/` has no `EventSource`, `text/event-stream` or `useRevalidator` usage (searched 2026-11-12).
 
-ADR 0006, the mailer and the **Notification** glossary entry are on the `add-refund-glossary` branch, not on `main`. This research branch was cut from `main`, so those links point at that branch.
+ADR 0006, the mailer and the **Notification** glossary entry are not on `main`, which this research branch was cut from. They were read from the local `add-refund-glossary` branch, which was not on `origin` on 2026-11-12, so they are named by path and not linked.
 
 ## 2. Comparison at a glance
 
