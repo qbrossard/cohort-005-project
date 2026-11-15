@@ -8,6 +8,9 @@ import {
   NotificationFeedPrototypeProvider,
   SidebarHeaderSlot,
   SidebarNavSlot,
+  SidebarNavBadge,
+  SidebarSectionSlot,
+  MainOverlaySlot,
 } from "~/components/notification-feed-prototype";
 import { getKnockFeedConfig } from "~/lib/notification-feed-prototype.server";
 import { getCurrentUserId, getDevCountry } from "~/lib/session";
@@ -246,7 +249,10 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
         isTeamAdmin={userIsTeamAdmin}
         headerSlot={currentUser ? <SidebarHeaderSlot /> : null}
         navSlot={currentUser ? <SidebarNavSlot /> : null}
+        navBadge={(to) => <SidebarNavBadge to={to} />}
+        sectionSlot={(visibleNav) => <SidebarSectionSlot visibleNav={visibleNav} />}
       />
+      <MainOverlaySlot />
       <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>

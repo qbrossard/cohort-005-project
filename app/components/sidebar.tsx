@@ -44,6 +44,8 @@ interface SidebarProps {
   // PROTOTYPE: mount points for the Notification Feed prototype
   headerSlot?: React.ReactNode;
   navSlot?: React.ReactNode;
+  navBadge?: (to: string) => React.ReactNode;
+  sectionSlot?: (visibleNav: string[]) => React.ReactNode;
 }
 
 interface NavItem {
@@ -122,6 +124,8 @@ export function Sidebar({
   isTeamAdmin = false,
   headerSlot,
   navSlot,
+  navBadge,
+  sectionSlot,
 }: SidebarProps) {
   const currentUserRole = currentUser?.role ?? null;
   const [isDark, setIsDark] = useState(false);
@@ -167,6 +171,7 @@ export function Sidebar({
             >
               {item.icon}
               {item.label}
+              {navBadge?.(item.to)}
             </NavLink>
           ))}
         {isTeamAdmin && (
@@ -183,9 +188,17 @@ export function Sidebar({
           >
             <UsersRound className="size-4" />
             Team
+            {navBadge?.("/team")}
           </NavLink>
         )}
       </nav>
+
+      {sectionSlot?.([
+        ...navItems
+          .filter((item) => isVisible(item, currentUserRole))
+          .map((item) => item.to),
+        ...(isTeamAdmin ? ["/team"] : []),
+      ])}
 
       {recentCourses.length > 0 && (
         <div className="border-t border-sidebar-border p-3">
