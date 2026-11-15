@@ -21,6 +21,9 @@
 //   F  Sidebar + page   D and C together: the sidebar carries what's new (counts on nav
 //                     items, "For you" stack), a full page carries everything, including
 //                     history · seeing it reads it, at the place or on the page
+//   G  For you + page   F without the scattered counts: one unread count, on the
+//                     "Notifications" nav item · "For you" stack in the sidebar shows the
+//                     latest unread of every kind · full page for everything
 
 import {
   createContext,
@@ -68,8 +71,9 @@ export const VARIANTS: PrototypeVariant[] = [
   { key: "D", name: "Sidebar is the feed" },
   { key: "E", name: "Briefing island" },
   { key: "F", name: "Sidebar + page" },
+  { key: "G", name: "For you + page" },
 ];
-type VariantKey = "A" | "B" | "C" | "D" | "E" | "F";
+type VariantKey = "A" | "B" | "C" | "D" | "E" | "F" | "G";
 
 interface FeedConfig {
   publicKey: string;
@@ -407,9 +411,11 @@ export function SidebarHeaderSlot() {
 export function SidebarNavSlot() {
   const { variant } = useFeed();
   if (variant === "B") return <VariantB />;
-  if (variant === "C") return <VariantCNavItem />;
+  if (variant === "C") return <VariantCNavItem indicator="dot" />;
   // F: the counts live on the other nav items, so this one stays quiet
-  if (variant === "F") return <VariantCNavItem quiet />;
+  if (variant === "F") return <VariantCNavItem indicator="none" />;
+  // G: the only count anywhere
+  if (variant === "G") return <VariantCNavItem indicator="count" />;
   return null;
 }
 
@@ -424,6 +430,8 @@ export function SidebarNavBadge({ to }: { to: string }) {
 // is showing this user, so nothing gets badged onto an item they can't see.
 export function SidebarSectionSlot({ visibleNav }: { visibleNav: string[] }) {
   const { variant } = useFeed();
+  // G: no nav item carries a count, so every Notification belongs in "For you"
+  if (variant === "G") return <VariantDForYou visibleNav={[]} seeAll />;
   if (variant !== "D" && variant !== "F") return null;
   return <VariantDForYou visibleNav={visibleNav} seeAll={variant === "F"} />;
 }
@@ -705,14 +713,19 @@ function VariantB() {
 
 export const VARIANT_C_PATH = "/prototype/notifications";
 
-function VariantCNavItem({ quiet = false }: { quiet?: boolean }) {
+function VariantCNavItem({ indicator }: { indicator: "dot" | "count" | "none" }) {
   const { metadata } = useFeed();
   return (
     <NavLink to={VARIANT_C_PATH} className={({ isActive }) => navItemClass(isActive)}>
       <Bell className="size-4" />
       Notifications
-      {!quiet && metadata.unseen_count > 0 && (
+      {indicator === "dot" && metadata.unseen_count > 0 && (
         <span className="ml-auto size-2 rounded-full bg-red-500" />
+      )}
+      {indicator === "count" && metadata.unread_count > 0 && (
+        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold leading-none text-primary-foreground">
+          {metadata.unread_count}
+        </span>
       )}
     </NavLink>
   );
@@ -765,9 +778,9 @@ export function VariantCPage() {
 
   return (
     <div className="mx-auto max-w-3xl p-6 lg:p-8">
-      {variant !== "C" && variant !== "F" && (
+      {!["C", "F", "G"].includes(variant) && (
         <p className="mb-4 rounded-md border border-dashed border-fuchsia-400 p-3 text-sm text-muted-foreground">
-          This page only exists in variants C and F. You're looking at variant {variant}.
+          This page only exists in variants C, F and G. You're looking at variant {variant}.
         </p>
       )}
       <h1 className="text-2xl font-bold tracking-tight">Notifications</h1>
