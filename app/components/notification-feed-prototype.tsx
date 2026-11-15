@@ -18,6 +18,9 @@
 //   E  Briefing island   floating capsule that summarises ("3 enrollments · 2 questions") ·
 //                     expands into grouped cards you act on in place (approve, reply) ·
 //                     no read/unread: a Notification is either waiting or done
+//   F  Sidebar + page   D and C together: the sidebar carries what's new (counts on nav
+//                     items, "For you" stack), a full page carries everything, including
+//                     history · seeing it reads it, at the place or on the page
 
 import {
   createContext,
@@ -64,8 +67,9 @@ export const VARIANTS: PrototypeVariant[] = [
   { key: "C", name: "Full page" },
   { key: "D", name: "Sidebar is the feed" },
   { key: "E", name: "Briefing island" },
+  { key: "F", name: "Sidebar + page" },
 ];
-type VariantKey = "A" | "B" | "C" | "D" | "E";
+type VariantKey = "A" | "B" | "C" | "D" | "E" | "F";
 
 interface FeedConfig {
   publicKey: string;
@@ -404,13 +408,15 @@ export function SidebarNavSlot() {
   const { variant } = useFeed();
   if (variant === "B") return <VariantB />;
   if (variant === "C") return <VariantCNavItem />;
+  // F: the counts live on the other nav items, so this one stays quiet
+  if (variant === "F") return <VariantCNavItem quiet />;
   return null;
 }
 
 // D: a count on the nav item a Notification belongs to.
 export function SidebarNavBadge({ to }: { to: string }) {
   const { variant, items } = useFeed();
-  if (variant !== "D") return null;
+  if (variant !== "D" && variant !== "F") return null;
   return <VariantDNavBadge to={to} items={items} />;
 }
 
@@ -418,7 +424,8 @@ export function SidebarNavBadge({ to }: { to: string }) {
 // is showing this user, so nothing gets badged onto an item they can't see.
 export function SidebarSectionSlot({ visibleNav }: { visibleNav: string[] }) {
   const { variant } = useFeed();
-  return variant === "D" ? <VariantDForYou visibleNav={visibleNav} /> : null;
+  if (variant !== "D" && variant !== "F") return null;
+  return <VariantDForYou visibleNav={visibleNav} seeAll={variant === "F"} />;
 }
 
 // E floats over the page rather than living in the sidebar.
@@ -698,13 +705,13 @@ function VariantB() {
 
 export const VARIANT_C_PATH = "/prototype/notifications";
 
-function VariantCNavItem() {
+function VariantCNavItem({ quiet = false }: { quiet?: boolean }) {
   const { metadata } = useFeed();
   return (
     <NavLink to={VARIANT_C_PATH} className={({ isActive }) => navItemClass(isActive)}>
       <Bell className="size-4" />
       Notifications
-      {metadata.unseen_count > 0 && (
+      {!quiet && metadata.unseen_count > 0 && (
         <span className="ml-auto size-2 rounded-full bg-red-500" />
       )}
     </NavLink>
@@ -758,9 +765,9 @@ export function VariantCPage() {
 
   return (
     <div className="mx-auto max-w-3xl p-6 lg:p-8">
-      {variant !== "C" && (
+      {variant !== "C" && variant !== "F" && (
         <p className="mb-4 rounded-md border border-dashed border-fuchsia-400 p-3 text-sm text-muted-foreground">
-          This page only exists in variant C. You're looking at variant {variant}.
+          This page only exists in variants C and F. You're looking at variant {variant}.
         </p>
       )}
       <h1 className="text-2xl font-bold tracking-tight">Notifications</h1>
@@ -892,7 +899,13 @@ function VariantDNavBadge({ to, items }: { to: string; items: FeedItem[] }) {
   );
 }
 
-function VariantDForYou({ visibleNav }: { visibleNav: string[] }) {
+function VariantDForYou({
+  visibleNav,
+  seeAll = false,
+}: {
+  visibleNav: string[];
+  seeAll?: boolean;
+}) {
   const { items, feed, open } = useFeed();
   const { pathname } = useLocation();
 
@@ -917,8 +930,16 @@ function VariantDForYou({ visibleNav }: { visibleNav: string[] }) {
 
   return (
     <div className="border-t border-sidebar-border p-3">
-      <div className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+      <div className="mb-2 flex items-baseline justify-between px-3 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
         For you
+        {seeAll && (
+          <NavLink
+            to={VARIANT_C_PATH}
+            className="font-medium normal-case tracking-normal hover:text-sidebar-foreground hover:underline"
+          >
+            See all
+          </NavLink>
+        )}
       </div>
       <div className="space-y-1">
         {homeless.slice(0, 4).map((item) => {
