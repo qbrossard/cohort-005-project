@@ -47,6 +47,8 @@ export default [
     route("settings", "routes/settings.tsx"),
     route("team", "routes/team.tsx"),
     route("redeem/:code", "routes/redeem.$code.tsx"),
+    // PROTOTYPE: variant C of the Notification Feed prototype
+    route("prototype/notifications", "routes/prototype.notifications.tsx"),
   ]),
   route("signup", "routes/signup.tsx"),
   route("login", "routes/login.tsx"),
@@ -54,4 +56,6 @@ export default [
   route("api/logout", "routes/api.logout.ts"),
   route("api/video-tracking", "routes/api.video-tracking.ts"),
   route("api/set-dev-country", "routes/api.set-dev-country.ts"),
+  // PROTOTYPE: sends a catalogue Notification through Knock
+  route("api/prototype-notify", "routes/api.prototype-notify.ts"),
 ] satisfies RouteConfig;

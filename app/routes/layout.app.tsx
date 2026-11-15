@@ -3,6 +3,13 @@ import type { Route } from "./+types/layout.app";
 import { Sidebar } from "~/components/sidebar";
 import { DevUI } from "~/components/dev-ui";
 import { Toaster } from "sonner";
+// PROTOTYPE: Notification Feed prototype
+import {
+  NotificationFeedPrototypeProvider,
+  SidebarHeaderSlot,
+  SidebarNavSlot,
+} from "~/components/notification-feed-prototype";
+import { getKnockFeedConfig } from "~/lib/notification-feed-prototype.server";
 import { getCurrentUserId, getDevCountry } from "~/lib/session";
 import { getCountryTierInfo, COUNTRIES } from "~/lib/ppp";
 import { eq, and, or, sql, desc } from "drizzle-orm";
@@ -213,6 +220,8 @@ export async function loader({ request }: Route.LoaderArgs) {
     countryTierInfo,
     countries: COUNTRIES,
     isTeamAdmin: currentUserId ? isTeamAdmin(currentUserId) : false,
+    // PROTOTYPE: what the browser needs to read this user's own Knock feed
+    knockFeed: await getKnockFeedConfig(currentUser ? currentUser.id : null),
   };
 }
 
@@ -225,14 +234,18 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
     countryTierInfo,
     countries,
     isTeamAdmin: userIsTeamAdmin,
+    knockFeed,
   } = loaderData;
 
   return (
+    <NotificationFeedPrototypeProvider config={knockFeed}>
     <div className="flex h-screen overflow-hidden">
       <Sidebar
         currentUser={currentUser}
         recentCourses={recentCourses}
         isTeamAdmin={userIsTeamAdmin}
+        headerSlot={currentUser ? <SidebarHeaderSlot /> : null}
+        navSlot={currentUser ? <SidebarNavSlot /> : null}
       />
       <main className="flex-1 overflow-y-auto">
         <Outlet />
@@ -246,5 +259,6 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
       />
       <Toaster position="bottom-right" richColors closeButton />
     </div>
+    </NotificationFeedPrototypeProvider>
   );
 }
